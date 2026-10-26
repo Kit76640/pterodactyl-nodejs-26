@@ -1,0 +1,40 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-10-26T00:00:00+00:00",
+    "name": "Node.js 26 (Git)",
+    "author": "kit76640@users.noreply.github.com",
+    "description": "Run a Node.js 26 app, optionally cloned and updated from a Git repository on every start.",
+    "features": null,
+    "docker_images": {
+        "Node.js 26": "ghcr.io/kit76640/pterodactyl-nodejs-26:latest"
+    },
+    "file_denylist": [],
+    "startup": "if [[ -d .git ]] && [[ \"{{AUTO_UPDATE}}\" == \"1\" ]]; then git pull; fi; if [[ ! -z \"{{NODE_PACKAGES}}\" ]]; then /usr/local/bin/npm install {{NODE_PACKAGES}}; fi; if [[ -f /home/container/package.json ]]; then /usr/local/bin/npm install; fi; /usr/local/bin/node /home/container/{{MAIN_FILE}} {{NODE_ARGS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\": \"\"}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\napt-get update\napt-get install -y git curl ca-certificates\nmkdir -p /mnt/server\ncd /mnt/server\nif [[ ! -z \"${GIT_ADDRESS}\" ]]; then\n  if [[ \"${GIT_ADDRESS}\" != *.git ]]; then GIT_ADDRESS=\"${GIT_ADDRESS}.git\"; fi\n  if [[ ! -z \"${USERNAME}\" && ! -z \"${ACCESS_TOKEN}\" ]]; then\n    GIT_ADDRESS=\"https://${USERNAME}:${ACCESS_TOKEN}@$(echo -e ${GIT_ADDRESS} | cut -d/ -f3-)\"\n  fi\n  if [[ -z \"$(ls -A /mnt/server)\" ]]; then\n    if [[ ! -z \"${BRANCH}\" ]]; then git clone --single-branch --branch ${BRANCH} ${GIT_ADDRESS} .; else git clone ${GIT_ADDRESS} .; fi\n  fi\nfi\nif [[ -f /mnt/server/package.json ]]; then npm install; fi\necho \"Installation complete\"\nexit 0",
+            "container": "node:26-trixie-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {"name": "Git Repo Address", "description": "HTTPS URL of the Git repository to clone (leave empty to upload files manually).", "env_variable": "GIT_ADDRESS", "default_value": "", "user_viewable": true, "user_editable": true, "rules": "nullable|string", "field_type": "text"},
+        {"name": "Install Branch", "description": "Branch to clone.", "env_variable": "BRANCH", "default_value": "", "user_viewable": true, "user_editable": true, "rules": "nullable|string", "field_type": "text"},
+        {"name": "Git Username", "description": "Username for private repositories.", "env_variable": "USERNAME", "default_value": "", "user_viewable": true, "user_editable": true, "rules": "nullable|string", "field_type": "text"},
+        {"name": "Git Access Token", "description": "Personal access token for private repositories.", "env_variable": "ACCESS_TOKEN", "default_value": "", "user_viewable": false, "user_editable": true, "rules": "nullable|string", "field_type": "text"},
+        {"name": "Auto Update", "description": "Run git pull on every start (1 = yes, 0 = no).", "env_variable": "AUTO_UPDATE", "default_value": "0", "user_viewable": true, "user_editable": true, "rules": "required|boolean", "field_type": "text"},
+        {"name": "Main File", "description": "Entry file to run.", "env_variable": "MAIN_FILE", "default_value": "index.js", "user_viewable": true, "user_editable": true, "rules": "required|string|max:64", "field_type": "text"},
+        {"name": "Additional Node Packages", "description": "Space-separated npm packages to install on start.", "env_variable": "NODE_PACKAGES", "default_value": "", "user_viewable": true, "user_editable": true, "rules": "nullable|string", "field_type": "text"},
+        {"name": "Node Arguments", "description": "Extra arguments passed to node.", "env_variable": "NODE_ARGS", "default_value": "", "user_viewable": true, "user_editable": true, "rules": "nullable|string", "field_type": "text"}
+    ]
+}
